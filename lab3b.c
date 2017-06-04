@@ -1,4 +1,5 @@
 #include<getopt.h>
+#include <unistd.h>
 
 //IDEAS: Have a shell script that replaces comma(',') with space maybe(' ')
 
