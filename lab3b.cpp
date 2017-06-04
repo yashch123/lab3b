@@ -11,9 +11,9 @@ int num_blocks=0, num_inodes=0,block_size=0,inode_size=0,non_rnode=0,free_i=0,fr
 
 void read_file(ifstream& fin)
 {
-   int i=0;
+  int i=0,j=0,k=0;
   string super_buff="",head="",line;
-
+  
   while(getline(fin,line))
     {
       i=0,head="";
@@ -140,10 +140,42 @@ void read_file(ifstream& fin)
 	  super_buff="";
 	  i++;
 
+	 
 	  cout<<free_b<<" "<<free_i<<" "<<b_map<<" "<<i_map<<" "<<inodes_block<<endl;
 	}
+      else if(head=="BFREE")
+	{
+	  int bfree[free_b];
+	  i++;
+	  while(line[i]!='\0')
+	    {
+	      super_buff+=line[i];
+	      i++;
+	    }
+	  bfree[j]=atoi(super_buff.c_str());
+	  j++;
+	  super_buff="";
 	  
-	  
+	  cout<<bfree[j-1]<<" ";
+	}
+      else if(head=="IFREE")
+	{
+	  int ifree[free_i];
+
+	  i++;
+	  while(line[i]!='\0')
+	    {
+	      super_buff+=line[i];
+	      i++;
+	    }
+	  ifree[k]=atoi(super_buff.c_str());
+	  k++;
+	  super_buff="";
+
+	  cout<<"\n";
+	  cout<<ifree[k-1]<<" ";
+	}
+	 
 	  
 	  
 
