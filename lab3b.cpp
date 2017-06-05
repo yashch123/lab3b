@@ -3,16 +3,20 @@
 #include <string>
 #include <cstring>
 #include <cstdlib>
+#include <vector>
+#include <algorithm>
+#include <cmath>
 
 using namespace std;
 int num_blocks=0, num_inodes=0,block_size=0,inode_size=0,non_rnode=0,free_i=0,free_b=0,b_map=0,i_map=0,inodes_block=0;
 
-//IDEAS: Have a shell script that replaces comma(',') with space maybe(' ')
+vector<int> bfree,ifree,all_inode_num,inode_mode,inode_alloc,inode_unalloc;
 
 void read_file(ifstream& fin)
 {
   int i=0,j=0,k=0;
-  string super_buff="",head="",line;
+  string super_buff="",temp_buff="",head="",line;
+   
   
   while(getline(fin,line))
     {
@@ -145,37 +149,60 @@ void read_file(ifstream& fin)
 	}
       else if(head=="BFREE")
 	{
-	  int bfree[free_b];
 	  i++;
 	  while(line[i]!='\0')
 	    {
 	      super_buff+=line[i];
 	      i++;
 	    }
-	  bfree[j]=atoi(super_buff.c_str());
+	  bfree.push_back(atoi(super_buff.c_str()));
 	  j++;
 	  super_buff="";
-	  
-	  cout<<bfree[j-1]<<" ";
 	}
+			  
       else if(head=="IFREE")
 	{
-	  int ifree[free_i];
-
 	  i++;
 	  while(line[i]!='\0')
 	    {
 	      super_buff+=line[i];
 	      i++;
 	    }
-	  ifree[k]=atoi(super_buff.c_str());
-	  k++;
+	  ifree.push_back(atoi(super_buff.c_str()));
 	  super_buff="";
-
-	  cout<<"\n";
-	  cout<<ifree[k-1]<<" ";
 	}
-	 
+      else if(head=="INODE")
+	{
+	  i++;
+	  while(line[i]!=',')
+	    {
+	      super_buff+=line[i];
+	      i++;
+	    }
+	  all_inode_num.push_back(atoi(super_buff.c_str()));   //Get allocated inodes num
+	  //super_buff="";
+	  i++;
+
+	  while(line[i]!=',')
+	    i++;
+
+	  i++;
+	  
+	  while(line[i]!=',')
+	    {
+	      temp_buff+=line[i];
+	      i++;
+	    }
+	  if(atoi(temp_buff.c_str())==0)
+	    inode_unalloc.push_back(atoi(super_buff.c_str()));
+	  else
+	    inode_alloc.push_back(atoi(super_buff.c_str()));
+	  
+	  inode_mode.push_back(atoi(temp_buff.c_str()));
+	  super_buff="";
+	  temp_buff="";
+	  i++;
+	}
 	  
 	  
 
@@ -183,6 +210,22 @@ void read_file(ifstream& fin)
     }
 }
 
+
+void audit_inodes()
+{
+  vector<int>::iterator  it;
+  
+  for(it=inode_alloc.begin(); it!=inode_alloc.end(); it++)
+    {
+      if ( find(ifree.begin(), ifree.end(), *it) != ifree.end() )
+	cout<<"ALLOCATED INODE "<<*it<<" ON FREELIST\n";
+    }
+  for(it=inode_unalloc.begin(); it!=inode_unalloc.end(); it++)
+    {
+      if ( find(ifree.begin(), ifree.end(), *it) == ifree.end() )
+	cout<<"UNALLOCATED INODE "<<*it<<" NOT ON FREELIST\n";
+    }
+}
 
 int main(int argc, char** argv)
 {
@@ -200,6 +243,11 @@ int main(int argc, char** argv)
   //Reading file here:
   read_file(fin);
 
+  audit_inodes();
+
+
+ 
+  
  
 
 
