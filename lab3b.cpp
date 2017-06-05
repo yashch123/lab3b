@@ -8,9 +8,21 @@
 #include <cmath>
 
 using namespace std;
+
+struct inode{
+  int num;
+  int mode;
+  int links;
+};
+
 int num_blocks=0, num_inodes=0,block_size=0,inode_size=0,non_rnode=0,free_i=0,free_b=0,b_map=0,i_map=0,inodes_block=0;
 
-vector<int> bfree,ifree,all_inode_num,inode_mode,inode_alloc,inode_unalloc;
+vector<int> bfree,ifree,dir_inodes;
+
+vector<inode> inodes;
+
+
+
 
 void read_file(ifstream& fin)
 {
@@ -82,8 +94,6 @@ void read_file(ifstream& fin)
 	   non_rnode=atoi(super_buff.c_str());
 	
 
-	   cout<<"Blocks: "<<num_blocks<<" Nodes: "<<num_inodes<<" Bsize: "<<block_size<<" Inode size: "<<inode_size<<" Non-reserved: "<<non_rnode;
-	   cout<<endl;
 	}
       else if(head=="GROUP")
 	{
@@ -144,8 +154,6 @@ void read_file(ifstream& fin)
 	  super_buff="";
 	  i++;
 
-	 
-	  cout<<free_b<<" "<<free_i<<" "<<b_map<<" "<<i_map<<" "<<inodes_block<<endl;
 	}
       else if(head=="BFREE")
 	{
@@ -173,13 +181,15 @@ void read_file(ifstream& fin)
 	}
       else if(head=="INODE")
 	{
+	  inode in;
+	  string i1_buff="",i2_buff="",i3_buff="";
 	  i++;
 	  while(line[i]!=',')
 	    {
-	      super_buff+=line[i];
+	      i1_buff+=line[i];
 	      i++;
 	    }
-	  all_inode_num.push_back(atoi(super_buff.c_str()));   //Get allocated inodes num
+	  in.num=atoi(i1_buff.c_str());
 	  //super_buff="";
 	  i++;
 
@@ -190,19 +200,53 @@ void read_file(ifstream& fin)
 	  
 	  while(line[i]!=',')
 	    {
-	      temp_buff+=line[i];
+	      i2_buff+=line[i];
 	      i++;
 	    }
-	  if(atoi(temp_buff.c_str())==0)
-	    inode_unalloc.push_back(atoi(super_buff.c_str()));
-	  else
-	    inode_alloc.push_back(atoi(super_buff.c_str()));
-	  
-	  inode_mode.push_back(atoi(temp_buff.c_str()));
-	  super_buff="";
-	  temp_buff="";
+	  in.mode=atoi(i2_buff.c_str());
 	  i++;
+
+	  while(line[i]!=',')
+	    i++;
+	  i++;
+
+	  while(line[i]!=',')
+	    i++;
+	  i++;
+
+	  while(line[i]!=',')
+	    {
+	      i3_buff+=line[i];
+	      i++;
+	    }
+	  in.links=atoi(i3_buff.c_str());
+
+	  inodes.push_back(in);
+	  
 	}
+      else if(head=="DIRENT")
+	{
+
+	  i++;
+	  while(line[i]!=',')
+	    i++;
+	  i++;
+
+	  while(line[i]!=',')
+	    i++;
+	  
+	  i++;
+	  while(line[i]!=',')
+	    {
+	      super_buff+=line[i];
+	      i++;
+	    }
+	  dir_inodes.push_back(atoi(super_buff.c_str()));
+	  super_buff="";
+	  i++;
+
+	}
+	  
 	  
 	  
 
@@ -213,20 +257,72 @@ void read_file(ifstream& fin)
 
 void audit_inodes()
 {
-  vector<int>::iterator  it;
+  vector<inode>::iterator  it;
+  int t1;
   
-  for(it=inode_alloc.begin(); it!=inode_alloc.end(); it++)
+  for(it=inodes.begin(); it!=inodes.end(); ++it)
     {
-      if ( find(ifree.begin(), ifree.end(), *it) != ifree.end() )
-	cout<<"ALLOCATED INODE "<<*it<<" ON FREELIST\n";
+      t1=(*it).num;
+ 
+      if ( find(ifree.begin(), ifree.end(), t1) != ifree.end() )
+	cout<<"ALLOCATED INODE "<<t1<<" ON FREELIST\n";
     }
-  for(it=inode_unalloc.begin(); it!=inode_unalloc.end(); it++)
+
+  int t=0;
+  for(int i=non_rnode;i<=num_inodes;i++)
     {
-      if ( find(ifree.begin(), ifree.end(), *it) == ifree.end() )
-	cout<<"UNALLOCATED INODE "<<*it<<" NOT ON FREELIST\n";
+      for(it=inodes.begin(); it!=inodes.end(); ++it)
+	{
+	  int t2=(*it).num;
+	  if(t2==i)
+	    {
+	      t=1;
+	      break;
+	    }
+	}
+
+      if(t==0)
+	{
+	  if ( find(ifree.begin(), ifree.end(), i) == ifree.end() )
+	    {
+	      cout<<"UNALLOCATED INODE "<<i<<" NOT ON FREELIST\n";
+	      continue;
+	    }
+	}
+      t=0;
     }
+	 
+
+      
 }
 
+void audit_dirs()
+{
+  int ctr=0;
+  vector<inode>::iterator it;
+  vector<int>::iterator it1;
+  
+  for(it=inodes.begin(); it!=inodes.end(); ++it)
+    {
+      for(it1=dir_inodes.begin(); it1!=dir_inodes.end(); ++it1)
+	{
+	  if((*it).num==*it1)
+	    {
+	      ctr++;
+	    }
+	}
+      if(ctr!=(*it).links)
+	{
+	  cout<<"INODE "<<(*it).num<<" HAS "<<ctr<<" LINKS BUT LINKCOUNT IS "<<(*it).links<<endl;
+	}
+      ctr=0;
+
+      
+    }
+
+
+  
+}
 int main(int argc, char** argv)
 {
  
@@ -245,7 +341,7 @@ int main(int argc, char** argv)
 
   audit_inodes();
 
-
+  audit_dirs();
  
   
  
