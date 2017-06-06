@@ -32,6 +32,7 @@ struct dir{
 
 struct indir{
   int block;
+  int level;
   
 };
 
@@ -352,7 +353,12 @@ void read_file(ifstream& fin)
 	  i++;
 
 	  while(line[i]!=',')
-	    i++;
+	    {
+	      in_buff+=line[i];
+	      i++;
+	    }
+	  ind.level=atoi(in_buff.c_str());
+	  in_buff="";
 	  i++;
 
 	  while(line[i]!=',')
@@ -399,7 +405,7 @@ void audit_blocks()
 	{
 	  t2=0;
 	  
-	  for(int j=firstb;j<num_blocks;j++)
+	  for(int j=0;j<num_blocks;j++)
 	    {
 	      if((*it2).block_num==j || (*it2).block_num==0)
 		{
@@ -412,7 +418,7 @@ void audit_blocks()
 	    {
 	      if(m==12)
 		{
-		  if((*it2).block_num<firstb)
+		  if((*it2).block_num<firstb && (*it2).block_num>=0)
 		    {
 		      cout<<"RESERVED INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET 12"<<endl;
 		      continue;
@@ -425,7 +431,7 @@ void audit_blocks()
 		}
 	      else if(m==13)
 		{
-		  if((*it2).block_num<firstb)
+		  if((*it2).block_num<firstb && (*it2).block_num>=0)
 		    {
 		      cout<<"RESERVED DOUBLE INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET 268"<<endl;
 		      continue;
@@ -438,7 +444,7 @@ void audit_blocks()
 		}
 	      else if(m==14)
 		{
-		  if((*it2).block_num<firstb)
+		  if((*it2).block_num<firstb && (*it2).block_num>=0)
 		    {
 		      cout<<"RESERVED TRIPPLE INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET 65804"<<endl;
 		      continue;
@@ -451,7 +457,7 @@ void audit_blocks()
 		}
 	      else
 		{
-		  if((*it2).block_num<firstb)
+		  if((*it2).block_num<firstb && (*it2).block_num>=0)
 		    {
 		      cout<<"RESERVED BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET "<<m<<endl;
 		      continue;
@@ -484,7 +490,7 @@ void audit_blocks()
 		   b.offset=(*it3).offset;
 		   b.inode=(*it).num;
 		   alloc.push_back(b);
-		   break;
+		   continue;
 		 }
 		   
 	     }
@@ -496,25 +502,48 @@ void audit_blocks()
 	      if(i==(*it1).block)
 		{
 		   t1=1;
-		   // b.num_block=i;
-		   //b.offset=(*it3).offset;
-		   //alloc.push_back(i);
-		   break;
+		   b.block_num=i;
+		   if((*it1).level==1)
+		     b.offset=12;
+		   else if((*it1).level==2)
+		     b.offset=268;
+		   else if((*it1).level==3)
+		     b.offset=65804;
+		   alloc.push_back(b);
+		   continue;
 		}
 	    }
-	  
+	 
 	  if (t1==0 && find(bfree.begin(), bfree.end(), i) == bfree.end())
 	    {
 	      cout<<"UNREFERENCED BLOCK "<<i<<endl;
 	      continue;
 	    }
 	  
-	}    
+	}
+      else
+	{
+	  for(it1=indirs.begin(); it1!=indirs.end(); ++it1)
+		{
+		  if(i==(*it1).block)
+		    {
+		      b.block_num=i;
+		      if((*it1).level==1)
+			b.offset=12;
+		      else if((*it1).level==2)
+			b.offset=268;
+		      else if((*it1).level==3)
+			b.offset=65804;
+		      alloc.push_back(b);
+		      continue;
+		    }
+		}
+	}
       
       
       
     }
-
+  
   for(it3=alloc.begin();it3!=alloc.end();++it3)
     {
       int ctr=0;
@@ -555,10 +584,13 @@ void audit_inodes()
   
   for(it=inodes.begin(); it!=inodes.end(); ++it)  //Iterator to go through all inode entries in csv
     {
-      t1=(*it).num;  //saving inode number of allocated inode
+      if((*it).mode!=0 && (*it).links!=0)
+	{
+	  t1=(*it).num;  //saving inode number of allocated inode
  
-      if ( find(ifree.begin(), ifree.end(), t1) != ifree.end() )  //checking if the allocated inode is on the free list
-	cout<<"ALLOCATED INODE "<<t1<<" ON FREELIST\n";
+	  if ( find(ifree.begin(), ifree.end(), t1) != ifree.end() )  //checking if the allocated inode is on the free list
+	    cout<<"ALLOCATED INODE "<<t1<<" ON FREELIST\n";
+	}
     }
 
   int t=0;
