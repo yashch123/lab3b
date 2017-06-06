@@ -14,6 +14,7 @@ struct inode{
   int mode;
   int links;
   vector<int> blocks;
+  //int n_block;
 };
 
 struct dir{
@@ -193,6 +194,7 @@ void read_file(ifstream& fin)
 	}
       else if(head=="INODE")
 	{
+	  int m=0;
 	  inode in;
 	  string i1_buff="",i2_buff="",i3_buff="",i4_buff="";
 	  i++;
@@ -267,6 +269,8 @@ void read_file(ifstream& fin)
 	      i4_buff="";
 	      i++;
 	    }
+	  //in.n_block=m;
+	  //m++;
 	  inodes.push_back(in);
 	  
 	}
@@ -360,13 +364,40 @@ void read_file(ifstream& fin)
 
 void audit_blocks()
 {
-  int firstb,t=0,t1=0;
+  int firstb,t=0,t1=0,t2=0,m=0;
   vector<inode>::iterator  it;
   vector<indir>::iterator it1;
   vector<int> alloc;
   vector<int>::iterator it2;
   firstb=inodes_block+(num_inodes*inode_size)/block_size;
 
+  for(it=inodes.begin(); it!=inodes.end(); ++it)
+    {
+      m=0,t2=0;
+      for(it2=(*it).blocks.begin();it2!=(*it).blocks.end();++it2,m++)
+	{
+	  if(m>11)
+	    break;    
+	  
+	  for(int j=firstb;j<num_blocks;j++)
+	    {
+	      if((*it2)==j || *it2==0)
+		{
+		  t2=1;
+		  break;
+		}
+	    }
+	  
+	  if(t2==0)
+	    {
+	      cout<<"INVALID BLOCK "<<*it2<<" IN INODE "<<(*it).num<<" AT OFFSET "<<m<<endl;
+	      //m++;
+	      continue;
+	    }
+	  //m++;
+	}
+    }
+      
   for(int i=firstb;i<num_blocks;i++)
     {
       t=0,t1=0;
