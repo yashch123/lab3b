@@ -1,0 +1,17 @@
+NAME: YASH CHOUDHARY, SPARSH ARORA
+EMAIL: yashc@ucla.edu, sparsharora@g.ucla.edu
+UID: 704630134, 804653078
+
+
+Files Included:
+
+1. lab3b.cpp: C++ source module containing the required code for finding and reporting inconsistencies in the sample filesystem provided by a single .csv file argument. 
+
+2. README: File containing list of included files, references used, number of slip days, and other limitations.
+
+3. Makfile: Makfile containing implementaions of make, dist and clean used to compile, distribute and delete target files respectively. 
+
+References used:
+
+1. https://stackoverflow.com/questions/7868936/read-file-line-by-line
+2. https://stackoverflow.com/questions/571394/how-to-find-if-an-item-is-present-in-a-stdvector
