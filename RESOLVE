@@ -1,14 +1,12 @@
 RESOLVE THE FOLLOWING:
 
+1) link '..' : how to check validity of referenced 
 
-1) inode.mode - when checking if inode is valid, check for inode mode.
+2)RESERVED - offsets : assume 12-single, 268- double and 65804 for triple? or actually calculate?
 
-2) continues???? - check if continues are rightly used
+3)allocated blocks for indirect?- if allocated blocks for indirect have duplicates what to do?
 
-3) NAME WITH COMMAS - for name type with comma make sure name is recorded right
+4) DUPLICATE reserved?/DUPLICATE indirect?^
 
-4)RESERVED - offsets : assume 12-single, 268- double and 65804 for triple? or actually calculate?
 
-5)allocated blocks for indirect?- is allocated blocks for indirect have duplicates what to do?
-
-6)CHECK FOR BROADER PICTURE: check if code takes care of all possible errors (READTHROUGH ANF CHECKING OF CODE)
+FINAL: CHECK FOR BROADER PICTURE: check if code takes care of all possible errors (READTHROUGH ANF CHECKING OF CODE)
