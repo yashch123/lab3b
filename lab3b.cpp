@@ -22,13 +22,17 @@ struct dir{
   string name;
 };
 
+struct indir{
+  int block;
+};
+
 int num_blocks=0, num_inodes=0,block_size=0,inode_size=0,non_rnode=0,free_i=0,free_b=0,b_map=0,i_map=0,inodes_block=0;
 
 vector<int> bfree,ifree,dir_inodes;
 
 vector<inode> inodes;
 vector<dir> dirs;
-
+vector<indir> indirs;
 
 
 void read_file(ifstream& fin)
@@ -313,8 +317,37 @@ void read_file(ifstream& fin)
 	}
       else if(head=="INDIRECT")
 	{
+	  indir ind;
+	  string in_buff="";
+	    
 	  i++;
 	  
+	  while(line[i]!=',')
+	    i++;
+	  i++;
+
+	  while(line[i]!=',')
+	    i++;
+	  i++;
+
+	  while(line[i]!=',')
+	    i++;
+	  i++;
+
+	  while(line[i]!=',')
+	    i++;
+	  i++;
+
+	  while(line[i]!='\0')
+	    {
+	      in_buff+=line[i];
+	      i++;
+	    }
+	  ind.block=atoi(in_buff.c_str());
+	  in_buff="";
+	  
+	  indirs.push_back(ind);
+	}
 	  
 	  
 	  
