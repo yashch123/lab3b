@@ -24,6 +24,7 @@ struct dir{
 
 struct indir{
   int block;
+  
 };
 
 int num_blocks=0, num_inodes=0,block_size=0,inode_size=0,non_rnode=0,free_i=0,free_b=0,b_map=0,i_map=0,inodes_block=0;
@@ -359,13 +360,16 @@ void read_file(ifstream& fin)
 
 void audit_blocks()
 {
-  int firstb,t=0;
+  int firstb,t=0,t1=0;
   vector<inode>::iterator  it;
-  firstb=non_rnode+(num_inodes*inode_size)/block_size;
+  vector<indir>::iterator it1;
+  vector<int> alloc;
+  vector<int>::iterator it2;
+  firstb=inodes_block+(num_inodes*inode_size)/block_size;
 
   for(int i=firstb;i<num_blocks;i++)
     {
-      t=0;
+      t=0,t1=0;
       for(it=inodes.begin(); it!=inodes.end(); ++it)
 	 {
 	   if (find((*it).blocks.begin(), (*it).blocks.end(), i) == (*it).blocks.end())
@@ -375,21 +379,44 @@ void audit_blocks()
 	   else
 	     {
 	       t=1;
+	       alloc.push_back(i);
 	       break;
 	     }
 	 }
        if(t==0)
 	 {
-	   if (find(bfree.begin(), bfree.end(), i) == bfree.end())
+	   for(it1=indirs.begin(); it1!=indirs.end(); ++it1)
+	     {
+	       if(i==(*it1).block)
+		 {
+		   t1=1;
+		   alloc.push_back(i);
+		   break;
+		 }
+	     }
+	 
+	   if (t1==0 && find(bfree.begin(), bfree.end(), i) == bfree.end())
 	     {
 	       cout<<"UNREFERENCED BLOCK "<<i<<endl;
 	       continue;
 	     }
+
+	     
+		   
 	 }
 	   
     }
+
+  for(it2=alloc.begin(); it2!=alloc.end(); ++it2)
+    {
+      if (find(bfree.begin(), bfree.end(), *it2) != bfree.end())
+	{
+	  cout<<"ALLOCATED BLOCK "<< *it2<<" ON FREELIST"<<endl;
+	  continue;
+	}
+    }
 }
-	  
+
 
 void audit_inodes()
 {
