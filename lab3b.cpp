@@ -13,6 +13,7 @@ struct inode{
   int num;
   int mode;
   int links;
+  vector<int> blocks;
 };
 
 struct dir{
@@ -188,7 +189,7 @@ void read_file(ifstream& fin)
       else if(head=="INODE")
 	{
 	  inode in;
-	  string i1_buff="",i2_buff="",i3_buff="";
+	  string i1_buff="",i2_buff="",i3_buff="",i4_buff="";
 	  i++;
 	  while(line[i]!=',')
 	    {
@@ -226,7 +227,41 @@ void read_file(ifstream& fin)
 	      i++;
 	    }
 	  in.links=atoi(i3_buff.c_str());
+	  i++;
 
+	  while(line[i]!=',')
+	    i++;
+	  i++;
+
+	  while(line[i]!=',')
+	    i++;
+	  i++;
+
+	  while(line[i]!=',')
+	    i++;
+	  i++;
+
+	  while(line[i]!=',')
+	    i++;
+	  i++;
+
+	  while(line[i]!=',')
+	    i++;
+	  i++;
+
+	  while(line[i]!='\0')
+	    {
+	      while(line[i]!=',')
+		{
+		  if(line[i]=='\0')
+		    break;
+		  i4_buff+=line[i];
+		  i++;
+		}
+	      in.blocks.push_back(atoi(i4_buff.c_str()));
+	      i4_buff="";
+	      i++;
+	    }
 	  inodes.push_back(in);
 	  
 	}
@@ -276,6 +311,10 @@ void read_file(ifstream& fin)
 	  dirs.push_back(dr);
 
 	}
+      else if(head=="INDIRECT")
+	{
+	  i++;
+	  
 	  
 	  
 	  
@@ -284,6 +323,40 @@ void read_file(ifstream& fin)
     }
 }
 
+
+void audit_blocks()
+{
+  int firstb,t=0;
+  vector<inode>::iterator  it;
+  firstb=non_rnode+(num_inodes*inode_size)/block_size;
+
+  for(int i=firstb;i<num_blocks;i++)
+    {
+      t=0;
+      for(it=inodes.begin(); it!=inodes.end(); ++it)
+	 {
+	   if (find((*it).blocks.begin(), (*it).blocks.end(), i) == (*it).blocks.end())
+	     {
+	       continue;
+	     }
+	   else
+	     {
+	       t=1;
+	       break;
+	     }
+	 }
+       if(t==0)
+	 {
+	   if (find(bfree.begin(), bfree.end(), i) == bfree.end())
+	     {
+	       cout<<"UNREFERENCED BLOCK "<<i<<endl;
+	       continue;
+	     }
+	 }
+	   
+    }
+}
+	  
 
 void audit_inodes()
 {
@@ -299,7 +372,7 @@ void audit_inodes()
     }
 
   int t=0;
-  for(int i=non_rnode;i<=num_inodes;i++)   //iterates from first non reserved inode to the end of all inodes
+  for(int i=non_rnode;i<num_inodes;i++)   //iterates from first non reserved inode to the end of all inodes
     {
       for(it=inodes.begin(); it!=inodes.end(); ++it)  
 	{
@@ -387,7 +460,29 @@ void audit_dirs()
 	  continue;
 	}
 
-     
+      if((*it2).name=="'.'")
+	{
+	  if((*it2).parent!=(*it2).ref)
+	    {
+	      cout<<"DIRECTORY INODE "<<(*it2).parent<<" NAME '.' LINK TO INODE "<<(*it2).ref<<" SHOULD BE "<<(*it2).parent<<endl;
+	      continue;
+	    }
+	}
+      else if((*it2).name=="'..'")
+	{
+	  if((*it2).parent==2)
+	    {
+	      if((*it2).parent!=(*it2).ref)
+		{
+		  cout<<"DIRECTORY INODE "<<(*it2).parent<<" NAME '..' LINK TO INODE "<<(*it2).ref<<" SHOULD BE "<<(*it2).parent<<endl;
+		  continue;
+		}
+	    }
+	}
+	  //else part
+	    
+
+           
     }
   
 
@@ -409,6 +504,8 @@ int main(int argc, char** argv)
  
   //Reading file here:
   read_file(fin);
+
+  audit_blocks();
 
   audit_inodes();
 
