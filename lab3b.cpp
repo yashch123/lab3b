@@ -769,13 +769,29 @@ int main(int argc, char** argv)
   //Getting the csv file:
   if(argc !=2)
     {
-      cout<<"Error: Wrong number of arguments\n";
+      cout<<"Wrong number of inputs \n";
       return 1;
     }
- 
- 
+
+  /*  int check_fd;
+  check_fd = open(argv[1],O_CREAT |O_RDONLY,0666); 
+  
+  if(check_fd==-1){
+    cerr<<"Error in opening file.\n";
+    cerr<<"Usage: ./lab3b [filename]"<<endl;
+    return 1;
+    }*/
+    
   ifstream fin(argv[1],ifstream::in);
- 
+  
+    //fin.open(argv[1]);
+
+    if(!fin.is_open()){
+    cerr<<"Error in opening file.\n";                                                                                                                                                                      
+    cerr<<"Usage: ./lab3b [filename]"<<endl;                                                                                                                                                               
+    return 1;                                                                                                                                                                                                                                                      
+  }
+
   //Reading file here:
   read_file(fin);
 
