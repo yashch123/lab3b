@@ -676,7 +676,7 @@ void audit_dirs()
     }
 
 
-  int t1=0,t2=0;
+  int t1=0,t2=0,t3=0;
   for(it2=dirs.begin(); it2!=dirs.end(); ++it2)       //iterate through DIRENT entries
     {
       t2=0;
@@ -733,17 +733,36 @@ void audit_dirs()
 		  continue;
 		}
 	    }
+	  else
+	    {
+	      t3=0;
+	      for(it1=dirs.begin();it1!=dirs.end();++it1)
+		{
+		  if((*it2).parent==(*it1).ref  && (*it1).name!="'.'")
+		    {
+		      if((*it1).parent!=(*it2).ref)
+			{
+			      t3=1;
+			      break;
+			}
+		    }
+		}
+	      if(t3==1)
+		{
+		  
+		  cout<<"DIRECTORY INODE "<<(*it2).parent<<" NAME '..' LINK TO INODE "<<(*it2).ref<<" SHOULD BE "<<(*it1).parent<<endl;
+		  ret =false;
+		  continue;
+		}
+	    }
+	    
 	}
-	  //else part
+    }
+}
+	 
 	    
 
-           
-    }
-  
 
-
-  
-}
 int main(int argc, char** argv)
 {
  
