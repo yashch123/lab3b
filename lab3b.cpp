@@ -599,7 +599,7 @@ void audit_inodes()
       for(it=inodes.begin(); it!=inodes.end(); ++it)  
 	{
 	  int t2=(*it).num;    //gets allocated inode entire's inode no.
-	  if(t2==i)           //checks if an inode has been allocated or not
+	  if(t2==i && (*it).mode!=0 && (*it).links!=0)           //checks if an inode has been allocated or not
 	    {
 	      t=1;
 	      break;
@@ -669,7 +669,7 @@ void audit_dirs()
       t1=0;
       for(it3=inodes.begin();it3!=inodes.end();++it3)  //iterate through all INODE entries
 	{
-	  if ((*it2).ref==(*it3).num)     //check if inode referenced is already allocated
+	  if ((*it2).ref==(*it3).num && (*it3).mode!=0 && (*it3).links!=0)     //check if inode referenced is already allocated
 	    {
 	      t1=1;
 	      break;
