@@ -15,3 +15,4 @@ References used:
 
 1. https://stackoverflow.com/questions/7868936/read-file-line-by-line
 2. https://stackoverflow.com/questions/571394/how-to-find-if-an-item-is-present-in-a-stdvector
+3. http://www.nongnu.org/ext2-doc/ext2.html#I-BLOCK: Section 3.5.13 for logical offsets of blocks. 

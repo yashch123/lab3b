@@ -10,6 +10,8 @@
 
 using namespace std;
 
+bool ret = true;
+
 struct blocks{
   int block_num;
   int offset;
@@ -397,6 +399,7 @@ void audit_blocks()
   blocks b;
   vector<blocks>::iterator it2;
   firstb=inodes_block+(num_inodes*inode_size)/block_size;
+  int size_u32 = sizeof(__uint32_t);
 
   for(it=inodes.begin(); it!=inodes.end(); ++it)
     {
@@ -418,40 +421,55 @@ void audit_blocks()
 	    {
 	      if(m==12)
 		{
+		  long offset_m = 0;
+		  offset_m = offset_m + pow(block_size/size_u32,0) + 11;  //Basically 12!
+
 		  if((*it2).block_num<firstb && (*it2).block_num>=0)
 		    {
-		      cout<<"RESERVED INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET 12"<<endl;
+		      cout<<"RESERVED INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET "<<offset_m<<endl;
+		      ret = false;
 		      continue;
 		    }
 		  else
 		    {
-		      cout<<"INVALID INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET 12"<<endl;
+		      cout<<"INVALID INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET "<<offset_m<<endl;
+		      ret = false;
 		      continue;
 		    }
 		}
 	      else if(m==13)
 		{
+		  long offset_m = 11 + pow(block_size/size_u32,0);
+		  offset_m = offset_m + pow(block_size/size_u32,1);
+		  
 		  if((*it2).block_num<firstb && (*it2).block_num>=0)
 		    {
-		      cout<<"RESERVED DOUBLE INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET 268"<<endl;
+		      cout<<"RESERVED DOUBLE INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET "<<offset_m<<endl;
+		      ret = false;
 		      continue;
 		    }
 		  else
 		    {
-		      cout<<"INVALID DOUBLE INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET 268"<<endl;
+		      cout<<"INVALID DOUBLE INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET "<<offset_m<<endl;
+		      ret = false;
 		      continue;
 		    }
 		}
 	      else if(m==14)
 		{
+		  long offset_m = 12 + pow(block_size/size_u32,1);
+		  offset_m = offset_m + pow(block_size/size_u32,2);
+
 		  if((*it2).block_num<firstb && (*it2).block_num>=0)
 		    {
-		      cout<<"RESERVED TRIPPLE INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET 65804"<<endl;
+		      cout<<"RESERVED TRIPPLE INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET "<<offset_m<<endl;
+		      ret = false;
 		      continue;
 		    }
 		  else
 		    {
-		      cout<<"INVALID TRIPPLE INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET 65804"<<endl;
+		      cout<<"INVALID TRIPPLE INDIRECT BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET "<<offset_m<<endl;
+		      ret = false;
 		      continue;
 		    }
 		}
@@ -460,11 +478,13 @@ void audit_blocks()
 		  if((*it2).block_num<firstb && (*it2).block_num>=0)
 		    {
 		      cout<<"RESERVED BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET "<<m<<endl;
+		      ret = false;
 		      continue;
 		    }
 		  else
 		    {
 		      cout<<"INVALID BLOCK "<<(*it2).block_num<<" IN INODE "<<(*it).num<<" AT OFFSET "<<m<<endl;
+		      ret = false;
 		      continue;
 		    }
 		}
@@ -506,9 +526,9 @@ void audit_blocks()
 		   if((*it1).level==1)
 		     b.offset=12;
 		   else if((*it1).level==2)
-		     b.offset=268;
+		     b.offset=12+pow(block_size/size_u32,1);
 		   else if((*it1).level==3)
-		     b.offset=65804;
+		     b.offset=12+pow(block_size/size_u32,1)+pow(block_size/size_u32,2);
 		   alloc.push_back(b);
 		   continue;
 		}
@@ -517,6 +537,7 @@ void audit_blocks()
 	  if (t1==0 && find(bfree.begin(), bfree.end(), i) == bfree.end())
 	    {
 	      cout<<"UNREFERENCED BLOCK "<<i<<endl;
+	      ret = false;
 	      continue;
 	    }
 	  
@@ -531,9 +552,9 @@ void audit_blocks()
 		      if((*it1).level==1)
 			b.offset=12;
 		      else if((*it1).level==2)
-			b.offset=268;
+			b.offset=12+pow(block_size/size_u32,1);
 		      else if((*it1).level==3)
-			b.offset=65804;
+			b.offset=12+pow(block_size/size_u32,1)+pow(block_size/size_u32,2);
 		      alloc.push_back(b);
 		      continue;
 		    }
@@ -554,6 +575,8 @@ void audit_blocks()
 	}
       if(ctr>1)
 	{
+	  if(ret)
+	    ret = false;
 	  if((*it3).offset<12)
 	    cout<<"DUPLICATE BLOCK "<<(*it3).block_num<<" IN INODE "<<(*it3).inode<<" AT OFFSET "<<(*it3).offset<<endl;
 	  else if((*it3).offset==12)
@@ -562,7 +585,8 @@ void audit_blocks()
 	    cout<<"DUPLICATE DOUBLE INDIRECT BLOCK "<<(*it3).block_num<<" IN INODE "<<(*it3).inode<<" AT OFFSET "<<(*it3).offset<<endl;
 	  else if((*it3).offset==65804)
 	    cout<<"DUPLICATE TRIPPLE INDIRECT BLOCK "<<(*it3).block_num<<" IN INODE "<<(*it3).inode<<" AT OFFSET "<<(*it3).offset<<endl;
-	    
+	  else
+	    ret = true;
 	}
     }
 
@@ -571,7 +595,8 @@ void audit_blocks()
       if (find(bfree.begin(), bfree.end(), (*it3).block_num) != bfree.end())
 	{
 	  cout<<"ALLOCATED BLOCK "<< (*it3).block_num<<" ON FREELIST"<<endl;
-	      continue;
+	  ret = false;
+	  continue;
 	}
     }
 }
@@ -588,8 +613,8 @@ void audit_inodes()
 	{
 	  t1=(*it).num;  //saving inode number of allocated inode
  
-	  if ( find(ifree.begin(), ifree.end(), t1) != ifree.end() )  //checking if the allocated inode is on the free list
-	    cout<<"ALLOCATED INODE "<<t1<<" ON FREELIST\n";
+	  if ( find(ifree.begin(), ifree.end(), t1) != ifree.end() ){  //checking if the allocated inode is on the free list
+	    cout<<"ALLOCATED INODE "<<t1<<" ON FREELIST\n";ret = false;}
 	}
     }
 
@@ -611,6 +636,7 @@ void audit_inodes()
 	  if ( find(ifree.begin(), ifree.end(), i) == ifree.end() )   //check is this inode is in free list, if its not - print
 	    {
 	      cout<<"UNALLOCATED INODE "<<i<<" NOT ON FREELIST\n";
+	      ret = false;
 	      continue;
 	    }
 	}
@@ -640,6 +666,7 @@ void audit_dirs()
       if(ctr!=(*it).links)   //if this number doesn't match ilinks number from INODE entry - print
 	{
 	  cout<<"INODE "<<(*it).num<<" HAS "<<ctr<<" LINKS BUT LINKCOUNT IS "<<(*it).links<<endl;
+	  ret = false;
 	}
       ctr=0;
 
@@ -663,6 +690,7 @@ void audit_dirs()
       if(t2==0)              //reference inode is not a valid inode no.
 	{
 	  cout<<"DIRECTORY INODE "<< (*it2).parent << " NAME "<<(*it2).name <<" INVALID INODE "<<(*it2).ref<<endl;
+	  ret = false;
 	  continue;
 	}
       
@@ -679,6 +707,7 @@ void audit_dirs()
       if(t1==0)      //if ref inode is not allocated, print!
 	{
 	  cout<<"DIRECTORY INODE "<< (*it2).parent << " NAME "<<(*it2).name <<" UNALLOCATED INODE "<<(*it2).ref<<endl;
+	  ret = false;
 	  continue;
 	}
 
@@ -687,6 +716,7 @@ void audit_dirs()
 	  if((*it2).parent!=(*it2).ref)
 	    {
 	      cout<<"DIRECTORY INODE "<<(*it2).parent<<" NAME '.' LINK TO INODE "<<(*it2).ref<<" SHOULD BE "<<(*it2).parent<<endl;
+	      ret =false;
 	      continue;
 	    }
 	}
@@ -697,6 +727,7 @@ void audit_dirs()
 	      if((*it2).parent!=(*it2).ref)
 		{
 		  cout<<"DIRECTORY INODE "<<(*it2).parent<<" NAME '..' LINK TO INODE "<<(*it2).ref<<" SHOULD BE "<<(*it2).parent<<endl;
+		  ret =false;
 		  continue;
 		}
 	    }
@@ -739,7 +770,10 @@ int main(int argc, char** argv)
 
   /*********************READ SUPERBLOCK****************************/
 
-  return 0;
+  if(ret)
+    return 0;
+  else 
+    return 2;
 
 }
   
