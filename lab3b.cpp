@@ -43,6 +43,7 @@ int num_blocks=0, num_inodes=0,block_size=0,inode_size=0,non_rnode=0,free_i=0,fr
 
 vector<int> bfree,ifree,dir_inodes;
 
+
 vector<inode> inodes;
 vector<dir> dirs;
 vector<indir> indirs;
@@ -52,7 +53,7 @@ void read_file(ifstream& fin)
 {
   int i=0,j=0,k=0;
   string super_buff="",temp_buff="",head="",line;
-   
+  int size_u32 = sizeof(__uint32_t);
   
   while(getline(fin,line))
     {
@@ -282,9 +283,9 @@ void read_file(ifstream& fin)
 	      if(m==12)
 		b.offset=12;
 	      else if(m==13)
-		b.offset=268;
+		b.offset=12+pow(block_size/size_u32,1);
 	      else if(m==14)
-		b.offset=65804;
+		b.offset=12+pow(block_size/size_u32,1)+pow(block_size/size_u32,2);
 	      else
 		b.offset=m;
 	      m++;
@@ -528,21 +529,9 @@ void audit_blocks()
 	       if(i==(*it1).block)
 		 {
 		   t1=1;
-<<<<<<< HEAD
-		   b.block_num=i;
-		   if((*it1).level==1)
-		     b.offset=12;
-		   else if((*it1).level==2)
-		     b.offset=12+pow(block_size/size_u32,1);
-		   else if((*it1).level==3)
-		     b.offset=12+pow(block_size/size_u32,1)+pow(block_size/size_u32,2);
-		   alloc.push_back(b);
-		   continue;
-		}
-=======
 		   break;
 		 }
->>>>>>> 9f45bef5ca9b7a70906de866539af3d4c6775f88
+
 	    }
 		 
 	   
