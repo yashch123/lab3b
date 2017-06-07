@@ -33,6 +33,7 @@ struct dir{
 struct indir{
   int block;
   int level;
+  int inode;
   
 };
 
@@ -349,7 +350,12 @@ void read_file(ifstream& fin)
 	  i++;
 	  
 	  while(line[i]!=',')
-	    i++;
+	    {
+	      in_buff+=line[i];
+	      i++;
+	    }
+	  ind.inode=atoi(in_buff.c_str());
+	  in_buff="";
 	  i++;
 
 	  while(line[i]!=',')
@@ -405,7 +411,7 @@ void audit_blocks()
 	{
 	  t2=0;
 	  
-	  for(int j=0;j<num_blocks;j++)
+	  for(int j=firstb;j<num_blocks;j++)
 	    {
 	      if((*it2).block_num==j || (*it2).block_num==0)
 		{
@@ -499,21 +505,14 @@ void audit_blocks()
 	{
 	  for(it1=indirs.begin(); it1!=indirs.end(); ++it1)
 	    {
-	      if(i==(*it1).block)
-		{
+	       if(i==(*it1).block)
+		 {
 		   t1=1;
-		   b.block_num=i;
-		   if((*it1).level==1)
-		     b.offset=12;
-		   else if((*it1).level==2)
-		     b.offset=268;
-		   else if((*it1).level==3)
-		     b.offset=65804;
-		   alloc.push_back(b);
-		   continue;
-		}
+		   break;
+		 }
 	    }
-	 
+		 
+	   
 	  if (t1==0 && find(bfree.begin(), bfree.end(), i) == bfree.end())
 	    {
 	      cout<<"UNREFERENCED BLOCK "<<i<<endl;
@@ -527,7 +526,8 @@ void audit_blocks()
 		{
 		  if(i==(*it1).block)
 		    {
-		      b.block_num=i;
+		      b.block_num=(*it1).block;
+		      b.inode=(*it1).inode;
 		      if((*it1).level==1)
 			b.offset=12;
 		      else if((*it1).level==2)
